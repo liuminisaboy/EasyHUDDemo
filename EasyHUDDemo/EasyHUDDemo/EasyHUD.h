@@ -10,7 +10,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface EasyHUD : UIVisualEffectView
+@interface EasyHUD : UIView
 
 + (void)showStatus:(NSString*)status;
 + (void)showError:(NSString*)status;

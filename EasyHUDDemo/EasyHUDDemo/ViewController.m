@@ -29,7 +29,6 @@
     [self.view addSubview:tbview];
     
     listInfo = @[@"我们每个人都在吸入灰尘",@"岂曰无衣，与子同袍",@"回家不积极，脑壳有问题",@"真尼玛像我年轻时候一样",@"我要是你我就拿根棍子从嘴里捅进去直到屁眼",@"看看是什么堵住了你满肚子的学问",@"于国于民都用的上，可就是倒不出来"];
-    colors = @[[UIColor redColor],[UIColor orangeColor],[UIColor yellowColor],[UIColor greenColor],[UIColor cyanColor],[UIColor blueColor],[UIColor purpleColor]];
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
@@ -41,7 +40,6 @@
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"UITableViewCell"];
     }
     
-    cell.backgroundColor = colors[indexPath.row];
     cell.textLabel.text = listInfo[indexPath.row];
     
     return cell;
@@ -49,8 +47,12 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     
-    [EasyHUD showStatus:listInfo[indexPath.row]];
-//    [EasyHUD showError:listInfo[indexPath.row]];
+    if (indexPath.row % 2 == 0) {
+        [EasyHUD showStatus:listInfo[indexPath.row]];
+    }else {
+        [EasyHUD showError:listInfo[indexPath.row]];
+    }
+
 }
 
 @end

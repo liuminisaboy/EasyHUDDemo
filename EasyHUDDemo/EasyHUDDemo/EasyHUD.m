@@ -8,9 +8,7 @@
 
 #import "EasyHUD.h"
 
-#define kHUD_width      [UIScreen mainScreen].bounds.size.width
-#define kHUD_height     ([UIApplication sharedApplication].statusBarFrame.size.height + 44)
-#define kStatus_y       [UIApplication sharedApplication].statusBarFrame.size.height
+#define kStatusFont     [UIFont boldSystemFontOfSize:15]
 
 @interface EasyHUD()
 
@@ -18,62 +16,55 @@
 @property (nonatomic, copy) NSString* status;
 @property (nonatomic, assign) BOOL isShowing;   //showing
 
+@property (nonatomic, assign) CGFloat height_statusBar;
+@property (nonatomic, assign) CGFloat width_screen;
+@property (nonatomic, assign) CGFloat height_navBar;
+
 @end
 
 @implementation EasyHUD
 
 + (EasyHUD*)share
 {
-    static EasyHUD* hud;
+    static EasyHUD* hud = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         
-        UIBlurEffect* blur = [UIBlurEffect effectWithStyle:UIBlurEffectStyleLight];
-        hud = [[self alloc] initWithEffect:blur];
-        hud.frame = CGRectMake(0, 0, kHUD_width, kHUD_height);
-        hud.layer.masksToBounds = YES;
-        
-        UISwipeGestureRecognizer* swipe = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(gestureRecognizer:)];
-        [swipe setDirection:UISwipeGestureRecognizerDirectionUp];
-        [hud addGestureRecognizer:swipe];
-        
-        UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(gestureRecognizer:)];
-        [hud addGestureRecognizer:tap];
+        hud = [[EasyHUD alloc] init];
         
     });
     return hud;
 }
 
-
-#pragma mark - set alert text
-
-+ (void)showStatus:(NSString*)status{
-    [self loadHUDWithStatus:status bgColor:[[UIColor greenColor] colorWithAlphaComponent:0.618] textColor:[UIColor blackColor]];
-}
-+ (void)showError:(NSString*)status{
-    [self loadHUDWithStatus:status bgColor:[[UIColor redColor] colorWithAlphaComponent:0.618] textColor:[UIColor whiteColor]];
-}
-+ (void)loadHUDWithStatus:(NSString*)status bgColor:(UIColor*)bgColor textColor:(UIColor*)textColor
+- (instancetype)init
 {
-    [self share].status = status;
-    
-    [self share].backgroundColor = bgColor;
-    [self share].statusLabel.textColor = textColor;
-    [self share].statusLabel.text = status;
-    
-    if ([self share].isShowing) {
-        [self cancelPreviousPerformRequestsWithTarget:self];
-        [self performSelector:@selector(dismiss) withObject:nil afterDelay:2];
+    self = [super init];
+    if (self) {
         
-        return;
+        self.layer.shadowColor = [UIColor darkGrayColor].CGColor;
+        self.layer.shadowOffset = CGSizeMake(1, 2);
+        self.layer.shadowOpacity = 0.382;
+        self.layer.shadowRadius = 2;
+        self.layer.cornerRadius = 3;
+        
+        UISwipeGestureRecognizer* swipe = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(gestureRecognizer:)];
+        [swipe setDirection:UISwipeGestureRecognizerDirectionUp];
+        [self addGestureRecognizer:swipe];
+
+        UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(gestureRecognizer:)];
+        [self addGestureRecognizer:tap];
+        
+        self.width_screen = [UIScreen mainScreen].bounds.size.width;
+        if (@available(iOS 13.0, *)) {
+            UIStatusBarManager* sm = [UIApplication sharedApplication].delegate.window.windowScene.statusBarManager;
+            self.height_statusBar = sm.statusBarFrame.size.height;
+        }else {
+            self.height_statusBar = [UIApplication sharedApplication].statusBarFrame.size.height;
+        }
+        self.height_navBar = 44+self.height_statusBar;
     }
-    
-    [self show];
-    [self performSelector:@selector(dismiss) withObject:nil afterDelay:2];
+    return self;
 }
-
-
-#pragma mark - show & dismiss
 
 + (void)gestureRecognizer:(UIGestureRecognizer*)sender
 {
@@ -81,20 +72,62 @@
     [self dismiss];
 }
 
+#pragma mark - set alert text
 
++ (void)showStatus:(NSString*)status
+{
+    [self loadheaderViewWithStatus:status bgColor:[UIColor blueColor] textColor:[UIColor whiteColor]];
+}
++ (void)showError:(NSString*)status
+{
+    [self loadheaderViewWithStatus:status bgColor:[UIColor grayColor] textColor:[UIColor whiteColor]];
+}
++ (void)loadheaderViewWithStatus:(NSString*)status bgColor:(UIColor*)bgColor textColor:(UIColor*)textColor
+{
+    [self share].status = status;
+    
+    [self share].backgroundColor = bgColor;
+    [self share].statusLabel.textColor = textColor;
+    [self share].statusLabel.text = status;
+    
+    CGSize statusSize = [self sizeOfStatus:status];
+    CGSize selfSize = CGSizeMake(statusSize.width+50, statusSize.height+20);
+    
+    [self share].statusLabel.frame = CGRectMake(25, 10, statusSize.width, statusSize.height);
+    
+    [self share].frame = CGRectMake(([self share].width_screen-selfSize.width)*0.5,
+                                    [self share].isShowing ? (20+[self share].height_navBar) : [self share].height_statusBar,
+                                    selfSize.width,
+                                    selfSize.height);
+    
+    [self share].layer.cornerRadius = selfSize.height*0.5;
+    
+    if ([self share].isShowing) {
+        
+        [self cancelPreviousPerformRequestsWithTarget:self];
+        [self performSelector:@selector(dismiss) withObject:nil afterDelay:2];
+        return;
+    }
+    [self show];
+    [self performSelector:@selector(dismiss) withObject:nil afterDelay:2];
+}
+
+
+#pragma mark - show & dismiss
 
 + (void)show
 {
-    
     [self share].isShowing = YES;
     
     [[[[UIApplication sharedApplication] delegate] window] addSubview:[self share]];
-    [UIView animateWithDuration:0.35 animations:^{
+    [UIView animateWithDuration:0.382 animations:^{
         [self share].frame = CGRectMake([self share].frame.origin.x,
-                                        0,
+                                        20+[self share].height_navBar,
                                         [self share].bounds.size.width,
                                         [self share].bounds.size.height);
+        [self share].alpha = 1;
     }];
+    
 }
 
 + (void)dismiss
@@ -102,27 +135,41 @@
     if (![self share].status) {
         return;
     }
-    [UIView animateWithDuration:0.35 animations:^{
+    
+    [UIView animateWithDuration:0.382 delay:0.0 options:UIViewAnimationOptionCurveEaseInOut animations:^{
+        
         [self share].frame = CGRectMake([self share].frame.origin.x,
-                                        -[self share].bounds.size.height,
+                                        [self share].height_statusBar,
                                         [self share].bounds.size.width,
                                         [self share].bounds.size.height);
+        
+        [self share].alpha = 0;
+        
     } completion:^(BOOL finished) {
+        
         [self share].isShowing = NO;
         [[self share] removeFromSuperview];
         [self share].status = nil;
     }];
 }
 
-#pragma mark - lazu
++ (CGSize)sizeOfStatus:(NSString*)status
+{
+    NSDictionary* attribute = @{NSFontAttributeName:kStatusFont};
+    CGSize size = [status boundingRectWithSize:CGSizeMake([self share].width_screen-60, 80) options:NSStringDrawingTruncatesLastVisibleLine | NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading attributes:attribute context:nil].size;
+    
+    return size;
+}
 
+#pragma mark - lazy
 - (UILabel*)statusLabel{
     if (!_statusLabel) {
-        _statusLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, kStatus_y, kHUD_width-20, 44)];
-        _statusLabel.font = [UIFont boldSystemFontOfSize:15];
+        _statusLabel = [[UILabel alloc] init];
+        _statusLabel.font = kStatusFont;
         _statusLabel.textAlignment = 1;
         _statusLabel.numberOfLines = 0;
-        [self.contentView addSubview:_statusLabel];
+        
+        [self addSubview:_statusLabel];
     }
     return _statusLabel;
 }
