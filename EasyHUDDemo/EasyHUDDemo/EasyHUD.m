@@ -32,6 +32,18 @@
         
         hud = [[EasyHUD alloc] init];
         
+        hud.layer.shadowColor = [UIColor darkGrayColor].CGColor;
+        hud.layer.shadowOffset = CGSizeMake(1, 2);
+        hud.layer.shadowOpacity = 0.382;
+        hud.layer.shadowRadius = 2;
+        hud.layer.cornerRadius = 3;
+        
+        UISwipeGestureRecognizer* swipe = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(gestureRecognizer:)];
+        [swipe setDirection:UISwipeGestureRecognizerDirectionUp];
+        [hud addGestureRecognizer:swipe];
+
+        UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(gestureRecognizer:)];
+        [hud addGestureRecognizer:tap];
     });
     return hud;
 }
@@ -40,19 +52,6 @@
 {
     self = [super init];
     if (self) {
-        
-        self.layer.shadowColor = [UIColor darkGrayColor].CGColor;
-        self.layer.shadowOffset = CGSizeMake(1, 2);
-        self.layer.shadowOpacity = 0.382;
-        self.layer.shadowRadius = 2;
-        self.layer.cornerRadius = 3;
-        
-        UISwipeGestureRecognizer* swipe = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(gestureRecognizer:)];
-        [swipe setDirection:UISwipeGestureRecognizerDirectionUp];
-        [self addGestureRecognizer:swipe];
-
-        UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(gestureRecognizer:)];
-        [self addGestureRecognizer:tap];
         
         self.width_screen = [UIScreen mainScreen].bounds.size.width;
         if (@available(iOS 13.0, *)) {
